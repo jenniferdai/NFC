@@ -14,11 +14,13 @@ import android.nfc.tech.NdefFormatable;
 import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.text.Editable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.text.BreakIterator;
@@ -26,6 +28,7 @@ import java.text.BreakIterator;
 
 public class MainActivity extends ActionBarActivity {
     // Gets default NfcAdapter for the device
+    EditText mNote;
     NfcAdapter mNfcAdapter;
     // token that allows the foreign application to use your application's permissions to
     // execute a predefined piece of code.
@@ -43,7 +46,7 @@ public class MainActivity extends ActionBarActivity {
 
         setContentView(R.layout.activity_main);
         // get widgets that you want to interact with
-        EditText mNote = ((EditText) findViewById(R.id.note));
+        mNote = ((EditText) findViewById(R.id.note));
         mNote.setText("new text");
 
         // Handle all of our received NFC intents in this activity.
@@ -52,34 +55,18 @@ public class MainActivity extends ActionBarActivity {
 
         // Intent filters for reading a note from a tag or exchanging over p2p.
         IntentFilter ndefDetected = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
-        try {
-            onNewIntent(mNfcPendingIntent);
-        } catch (IntentFilter.MalformedMimeTypeException e) { }
-        mNdefExchangeFilters = new IntentFilter[] { ndefDetected };
-
-        // Intent filters for writing to a tag
-        IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
-        mWriteTagFilters = new IntentFilter[] { tagDetected };
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         // NDEF exchange mode
-        boolean mWriteMode;
-        if (!mWriteMode && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
             NdefMessage[] msgs = getNdefMessages(intent);
             promptForContent(msgs[0]);
-        }
-
-        // Tag writing mode
-        if (mWriteMode && NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
-            Tag detectedTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            writeTag(getNoteAsNdef(), detectedTag);
         }
     }
 
     private NdefMessage getNoteAsNdef() {
-        BreakIterator mNote;
         byte[] textBytes = mNote.getText().toString().getBytes();
         NdefRecord textRecord = new NdefRecord(NdefRecord.TNF_MIME_MEDIA, "text/plain".getBytes(),
                 new byte[] {}, textBytes);
@@ -133,6 +120,12 @@ public class MainActivity extends ActionBarActivity {
         return false;
     }
 
+    private void setNoteBody(String body) {
+        Editable text = mNote.getText();
+        text.clear();
+        text.append(body);
+    }
+    
     private void promptForContent(final NdefMessage msg) {
         new AlertDialog.Builder(this).setTitle("Replace current content?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -152,25 +145,24 @@ public class MainActivity extends ActionBarActivity {
 
     public void onResume() {
         super.onResume();
-        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
-            Intent intent;
-            Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
-            if (rawMsgs != null) {
-                NdefMessage[] msgs = new NdefMessage[rawMsgs.length];
-                for (int i = 0; i < rawMsgs.length; i++) {
-                    msgs[i] = (NdefMessage) rawMsgs[i];
-                }
-            }
-        }
-        //process the msgs array
+//        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
+//            Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+//            if (rawMsgs != null) {
+//                NdefMessage[] msgs = new NdefMessage[rawMsgs.length];
+//                for (int i = 0; i < rawMsgs.length; i++) {
+//                    msgs[i] = (NdefMessage) rawMsgs[i];
+//                }
+//            }
+//
+//        //process the msgs array
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mResumed = false;
-        mNfcAdapter.disableForegroundNdefPush(this);
-    }
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        boolean mResumed = false;
+//        mNfcAdapter.disableForegroundNdefPush(this);
+//    }
 
     NdefMessage[] getNdefMessages(Intent intent) {
         // Parse the intent
@@ -204,25 +196,29 @@ public class MainActivity extends ActionBarActivity {
         return msgs;
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.menu_main, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        // Handle action bar item clicks here. The action bar will
+//        // automatically handle clicks on the Home/Up button, so long
+//        // as you specify a parent activity in AndroidManifest.xml.
+//        int id = item.getItemId();
+//
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
+//
+    private void toast(String text) {
+//        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 }
